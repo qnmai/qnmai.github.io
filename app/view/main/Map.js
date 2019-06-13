@@ -117,7 +117,7 @@ window.my_map = new ol.Map({
     }),
     new ol.layer.Group({
       title: 'Réseau Secosud',
-      layers: [coupureaerien_layer]
+      layers: [t_coupureaerien_layer]
     })
   ],
   //overlays: [overlay],
@@ -139,3 +139,69 @@ Ext.define('SIG.view.main.Map',{
     // html: "Hello, World!!"
     map: window.my_map,
 });
+
+popup = Ext.create('GeoExt.component.Popup', {
+  map: window.my_map,
+  width: 140
+});
+
+window.my_map.on('click', function(evt) {
+  var coordinate = evt.coordinate;
+  var hdms = ol.coordinate.toStringHDMS(ol.proj.transform(
+      coordinate, 'EPSG:3857', 'EPSG:4326')
+  );
+  // Insert a linebreak after either N or S in hdms
+  hdms = hdms.replace(/([NS])/, '$1<br>');
+
+  var features = window.my_map.getFeaturesAtPixel(evt.pixel);
+  if (!features) {
+    popup.setHtml('');
+    //info.style.opacity = 0;
+    return;
+  }
+  var properties = features[0].getProperties();
+  console.log(properties);
+  var attributes = JSON.stringify(properties, null, 2);
+  // set content and position popup
+  popup.setHtml('<p><strong>Pointer rested on</strong>' +
+      '<br /><code>' + hdms + '</code></p>'+ attributes);
+  popup.position(coordinate);
+  popup.show();
+});
+
+// function showInfo(event) {
+//   var coordinate = event.coordinate;
+//   console.log(coordinate);
+//   var hdms = toStringHDMS(toLonLat(coordinate));
+//   var features = window.map.getFeaturesAtPixel(event.pixel);
+//   if (!features) {
+//     info.innerText = '';
+//     info.style.opacity = 0;
+//     return;
+//   }
+//   var properties = features[0].getProperties();
+//   console.log(properties);
+//   content.innerText = JSON.stringify(properties, null, 2);
+//   overlay.setPosition(coordinate);
+//   //content.style.opacity = 1;
+// }
+
+// hide the popup once it isn't on the map any longer
+window.my_map.on('pointerrestout', popup.hide, popup);
+
+description = Ext.create('Ext.panel.Panel', {
+    contentEl: 'description',
+    title: 'Description',
+    region: 'east',
+    width: 300,
+    border: false,
+    bodyPadding: 5
+});
+
+// Ext.create('Ext.Viewport', {
+//     layout: 'border',
+//     items: [
+//         mapComp,
+//         description
+//     ]
+// });
